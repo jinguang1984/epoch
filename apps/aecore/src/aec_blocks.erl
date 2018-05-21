@@ -125,13 +125,13 @@ new_key(LastBlock, CurrentKeyBlock, Miner, Trees0) ->
 
 -spec new_with_state(block(), block(), pubkey(), list(aetx_sign:signed_tx()), aec_trees:trees()) ->
                             {block(), aec_trees:trees()}.
-new_with_state(LastBlock, CurrentKeyBlock, Miner, Txs, Trees0) ->
+new_with_state(LastBlock = #block{}, CurrentKeyBlock, Miner, Txs, Trees0) ->
     {ok, LastBlockHeaderHash} = hash_internal_representation(LastBlock),
 
     LastBlockHeight = height(CurrentKeyBlock),
     Version = protocol_effective_at_height(LastBlockHeight),
 
-    {ok, Txs1, Trees} = aec_trees:apply_signed_txs(Miner, Txs, Trees0, LastBlockHeight, Version),
+    {ok, Txs1, Trees} = aec_trees:apply_signed_txs(Miner, aec_blocks:txs(LastBlock), Txs, Trees0, LastBlockHeight, Version),
     {ok, TxsRootHash} = aec_txs_trees:root_hash(aec_txs_trees:from_txs(Txs1)),
 
     NewBlock =

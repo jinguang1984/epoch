@@ -501,12 +501,19 @@ assert_state_hash_valid(Trees, Node) ->
 
 apply_node_transactions(Node, Trees) ->
     Txs = db_get_txs(hash(Node)),
+    PrevBlockTxs = get_prev_node_txs(Node),
     Height = node_height(Node),
     Version = node_version(Node),
     Miner = node_miner(Node),
-    case aec_trees:apply_signed_txs_strict(Miner, Txs, Trees, Height, Version) of
+    case aec_trees:apply_signed_txs_strict(Miner, Txs, PrevBlockTxs, Trees, Height, Version) of
         {ok, _, NewTrees} -> NewTrees;
         {error,_What} -> internal_error(invalid_transactions_in_block)
+    end.
+
+get_prev_node_txs(Node) ->
+    case node_height(Node) =:= aec_block_genesis:height() of
+        true  -> [];
+        false -> db_get_txs(prev_hash(Node))
     end.
 
 find_fork_point(Hash1, Hash2) ->
