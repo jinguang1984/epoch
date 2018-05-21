@@ -168,7 +168,7 @@ setup_node(Spec, BackendState) ->
         int_http => ?INT_HTTP_PORT,
         int_ws => ?INT_WS_PORT
     },
-    {LocalPorts, Sockets} = allocate_ports([sync, ext_http, int_http, int_ws]),
+    LocalPorts = allocate_ports([sync, ext_http, int_http, int_ws]),
     NodeState = #{
         spec => spec,
         postfix => Postfix,
@@ -179,7 +179,7 @@ setup_node(Spec, BackendState) ->
         privkey => PrivKey,
         exposed_ports => ExposedPorts,
         local_ports => LocalPorts,
-        sockets => Sockets
+        sockets => []
     },
 
     NetworkSpecs = maps:get(networks, Spec, ?DEFAULT_NETWORKS),
@@ -397,12 +397,13 @@ uid2postfix(Uid) -> <<"_", Uid/binary>>.
 free_port() ->
     {ok, Socket} = gen_tcp:listen(0, [{reuseaddr, true}]),
     {ok, Port} = inet:port(Socket),
-    gen_tcp:close(Socket),
     {ok, Port, Socket}.
 
 allocate_ports(Labels) -> allocate_ports(Labels, #{}, []).
 
-allocate_ports([], Ports, Sockets) -> {Ports, Sockets};
+allocate_ports([], Ports, Sockets) ->
+    [ gen_tcp:close(Socket) || Socket <- Sockets ],
+    Ports;
 allocate_ports([Label | Labels], Ports, Sockets) ->
     {ok, Port, Socket} = free_port(),
     allocate_ports(Labels, Ports#{Label => Port}, [Socket | Sockets]).
