@@ -80,7 +80,7 @@ genesis_block_with_state() ->
 
 genesis_block_with_state(Map) ->
     Txs = transactions(),
-    {ok, _, Trees} = aec_trees:apply_signed_txs_strict(miner(), Txs, populated_trees(Map), height(), ?GENESIS_VERSION),
+    {ok, _, Trees} = aec_trees:apply_signed_txs_strict(miner(), Txs, [], populated_trees(Map), height(), ?GENESIS_VERSION),
     Block =
         #block{
            version = ?GENESIS_VERSION,

@@ -265,12 +265,12 @@ assert_previous_height(Node) ->
     case {db_find_node(prev_hash(Node)), is_key_block(Node)} of
         {error, _} ->
             ok;
-        {PrevNode, true} ->
+        {{ok, PrevNode}, true} ->
             case node_height(PrevNode) =:= (node_height(Node) - 1) of
                 true -> ok;
                 false -> internal_error(height_inconsistent_for_keyblock_with_previous_hash)
             end;
-        {PrevNode, false} ->
+        {{ok, PrevNode}, false} ->
             case node_height(PrevNode) =:= node_height(Node) of
                 true -> ok;
                 false -> internal_error(height_inconsistent_for_microblock_with_previous_hash)
@@ -291,7 +291,7 @@ assert_key_block_target(Node) ->
         {ok, PrevNode} ->
             Delta         = aec_governance:key_blocks_to_check_difficulty_count(),
             Height        = node_height(Node),
-            GenesisHeight = aec_block_genesis:genesis_header(),
+            GenesisHeight = aec_headers:height(aec_block_genesis:genesis_header()),
             case Delta >= Height - GenesisHeight of
                 true ->
                     %% We only need to verify that the target is equal to its predecessor.

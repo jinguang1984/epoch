@@ -153,6 +153,7 @@ mine_blocks(Node, NumBlocksToMine, MiningRate) ->
            Node, application, set_env, [aecore, expected_mine_rate, MiningRate],
            5000),
     aecore_suite_utils:subscribe(Node, block_created),
+    aecore_suite_utils:subscribe(Node, micro_block_created),
     StartRes = rpc:call(Node, aec_conductor, start_mining, [], 5000),
     ct:log("aec_conductor:start_mining() (~p) -> ~p", [Node, StartRes]),
     Res = mine_blocks_loop(NumBlocksToMine),
@@ -175,6 +176,10 @@ mine_blocks_loop(Blocks, BlocksToMine) ->
     receive
         {gproc_ps_event, block_created, Info} ->
             ct:log("block created, Info=~p", [Info]),
+            #{info := Block} = Info,
+            mine_blocks_loop([Block | Blocks], BlocksToMine - 1);
+        {gproc_ps_event, micro_block_created, Info} ->
+            ct:log("micro block created, Info=~p", [Info]),
             #{info := Block} = Info,
             mine_blocks_loop([Block | Blocks], BlocksToMine - 1)
     after 30000 ->

@@ -7,6 +7,7 @@
 %% API
 -export([prev_hash/1,
          height/1,
+         miner/1,
          target/1,
          txs/1,
          txs_hash/1,
@@ -55,6 +56,9 @@ prev_hash(Block) ->
 -spec height(block()) -> height().
 height(Block) ->
     Block#block.height.
+
+miner(Block) ->
+    Block#block.miner.
 
 -spec target(block()) -> integer().
 target(Block) ->

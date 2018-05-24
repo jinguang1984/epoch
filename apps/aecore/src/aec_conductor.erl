@@ -418,6 +418,7 @@ handle_worker_reply(Pid, Reply, State) ->
 worker_reply(create_key_block_candidate, Res, State) ->
     handle_key_block_candidate_reply(Res, State);
 worker_reply(create_micro_block_candidate, Res, State) ->
+    epoch_mining:info("Res BADMATCH: ~p", [Res]),
     handle_micro_block_candidate_reply(Res, State);
 worker_reply(mining, Res, State) ->
     handle_mining_reply(Res, State);
@@ -447,10 +448,10 @@ preempt_if_new_top(#state{seen_top_block_hash = OldHash} = State, Origin) ->
     end.
 
 maybe_publish_top(none,_TopHash) -> ok;
-maybe_publish_top(block_created,_TopHash) ->
+maybe_publish_top({created, _},_TopHash) ->
     %% A new block we created is published unconditionally below.
     ok;
-maybe_publish_top(block_received, TopHash) ->
+maybe_publish_top({received, _}, TopHash) ->
     %% The received block changed the top. Publish the new top.
     {ok, Block} = aec_chain:get_block(TopHash),
     aec_events:publish(top_changed, Block),
@@ -869,7 +870,7 @@ handle_add_block(Block, #state{consensus = #consensus{leader_key = LeaderKey}} =
                             maybe_publish_block(Origin, Block),
                             case preempt_if_new_top(State, Origin) of
                                 no_change -> {ok, State};
-                                {changed, State1} -> {ok, setup_loop(State1, aec_blocks:key(Block), Origin)}
+                                {changed, State1} -> {ok, setup_loop(State1, aec_blocks:miner(Block), Origin)}
                             end;
                         {error, Reason} ->
                             lager:error("Couldn't insert block (~p)", [Reason]),
@@ -899,5 +900,3 @@ setup_loop(State, no_key, {received, micro_block}) ->
     start_mining(State#state{consensus = #consensus{leader = false}});
 setup_loop(State, _, {synced, _}) ->
     start_mining(State#state{consensus = #consensus{leader = false}}).
-
-
