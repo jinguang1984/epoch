@@ -86,7 +86,7 @@ get_txs_to_mine_in_pool(TopHash) ->
         -> {ok, aec_blocks:block(), aec_pow:nonce()} | {error, term()}.
 create_micro_block_candidate(Txs, TopBlock, CurrentKeyBlock, TopBlockTrees) ->
     Miner = aec_blocks:miner(TopBlock),
-    aec_blocks:new_micro(TopBlock, CurrentKeyBlock, Miner, Txs, TopBlockTrees).
+    {ok, aec_blocks:new_micro(TopBlock, CurrentKeyBlock, Miner, Txs, TopBlockTrees)}.
 
 
 -spec adjust_target(aec_blocks:block(), list(aec_headers:header())) ->

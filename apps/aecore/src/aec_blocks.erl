@@ -69,8 +69,9 @@ difficulty(Block) ->
     aec_pow:target_to_difficulty(target(Block)).
 
 -spec is_key_block(block()) -> boolean().
-is_key_block(Block) ->
-    Block#block.miner =/= undefined.
+is_key_block(#block{miner = Miner, height = Height}) ->
+    Miner =/= <<0:?MINER_PUB_BYTES/unit:8>> orelse
+        (Miner =:= <<0:?MINER_PUB_BYTES/unit:8>> andalso Height =:= aec_block_genesis:height()).
 
 
 time_in_msecs(Block) ->
@@ -147,14 +148,12 @@ new_with_state(LastBlock = #block{}, CurrentKeyBlock, Miner, Txs, Trees0) ->
                txs = Txs1,
                target = target(LastBlock),
                time = aeu_time:now_in_msecs(),
-               version = Version,
-               miner = Miner},
+               version = Version},
     {NewBlock, Trees}.
 
 new_key_with_state(LastBlock, CurrentKeyBlock, Miner, Trees0) ->
 
     {UncompleteBlock, Trees} = new_with_state(LastBlock, CurrentKeyBlock, Miner, [], Trees0),
-    {ok, KeyToClaimLeader} = aec_keys:pubkey(),
 
     %% Assert correctness of last block protocol version, as minimum
     %% sanity check on previous block and state (mainly for potential
@@ -166,7 +165,7 @@ new_key_with_state(LastBlock, CurrentKeyBlock, Miner, Trees0) ->
     NewHeight = LastBlockHeight + 1,
     Version = protocol_effective_at_height(NewHeight),
 
-    {UncompleteBlock#block{height = NewHeight, version = Version, miner = KeyToClaimLeader, key_hash = undefined}, Trees}.
+    {UncompleteBlock#block{height = NewHeight, version = Version, miner = Miner, key_hash = undefined}, Trees}.
 
 -spec to_header(block()) -> aec_headers:header().
 to_header(#block{height = Height,

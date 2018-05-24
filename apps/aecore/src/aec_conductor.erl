@@ -375,6 +375,8 @@ worker_timeout(create_key_block_candidate) ->
     infinity;
 worker_timeout(create_micro_block_candidate) ->
     infinity;
+worker_timeout(micro_signing) ->
+    infinity;
 worker_timeout(mining) ->
     aeu_env:get_env(aecore, mining_attempt_timeout, ?DEFAULT_MINING_ATTEMPT_TIMEOUT);
 worker_timeout(wait_for_keys) ->
@@ -401,6 +403,7 @@ wrap_worker_fun(Fun) ->
 handle_worker_reply(Pid, Reply, State) ->
     Workers = State#state.workers,
     Blocked = State#state.blocked_tags,
+    epoch_mining:info("MY WORKERS ARE: ~p", [Workers]),
     case orddict:find(Pid, Workers) of
         {ok, Info} ->
             cleanup_after_worker(Info),
@@ -418,7 +421,6 @@ handle_worker_reply(Pid, Reply, State) ->
 worker_reply(create_key_block_candidate, Res, State) ->
     handle_key_block_candidate_reply(Res, State);
 worker_reply(create_micro_block_candidate, Res, State) ->
-    epoch_mining:info("Res BADMATCH: ~p", [Res]),
     handle_micro_block_candidate_reply(Res, State);
 worker_reply(mining, Res, State) ->
     handle_mining_reply(Res, State);
@@ -674,14 +676,14 @@ start_micro_signing(#state{micro_block_candidate = Candidate} = State) ->
     Info      = [{top_block_hash, State#state.seen_top_block_hash}],
     aec_events:publish(start_micro_signing, Info),
     Fun = fun() ->
-                  {aec_keys:sign(HeaderBin), HeaderBin}
+                  aec_keys:sign(HeaderBin)
           end,
     dispatch_worker(micro_signing, Fun, State).
 
 handle_micro_signing_reply(_Reply, #state{micro_block_candidate = undefined} = State) ->
     %% Something invalidated the block candidate already.
     start_micro_sleep(State);
-handle_micro_signing_reply({ok, {[Signature], HeaderBin}}, #state{} = State) ->
+handle_micro_signing_reply({ok, {HeaderBin, [Signature]}}, #state{} = State) ->
     Candidate = State#state.micro_block_candidate,
     %% Check that the solution is for this block
     case HeaderBin =:= Candidate#candidate.bin of
