@@ -738,7 +738,7 @@ new_candidate(Block, State) ->
     new_candidate(Block, undefined, undefined, State).
 
 new_candidate(Block, Nonce, MaxNonce, State) ->
-    HeaderBin = aec_hash:hash(aec_headers:serialize_to_binary(aec_blocks:to_header(Block))),
+    HeaderBin = aec_hash:hash(header, aec_headers:serialize_to_binary(aec_blocks:to_header(Block))),
     #candidate{block = Block,
                bin = HeaderBin,
                nonce = Nonce,
