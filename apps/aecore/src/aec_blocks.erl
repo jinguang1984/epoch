@@ -347,5 +347,5 @@ validate_txs_hash(#block{txs = Txs,
             {error, malformed_txs_hash}
     end.
 
-type(#block{miner = undefined, pow_evidence = no_value, txs = [], height = H}) when H > 0 -> micro;
-type(_) -> key.
+type(#block{miner = undefined}) -> key;
+type(_) -> micro.

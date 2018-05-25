@@ -244,5 +244,5 @@ validate_signature({#header{signature = Sig} = Header, _, LeaderKey}) ->
         {error, _} -> {error, signature_verification_failed}
     end.
 
-type(#header{miner = undefined, pow_evidence = no_value, height = H}) when H > 0 -> micro;
-type(_) -> key.
+type(#header{miner = undefined}) -> key;
+type(_) -> micro.
