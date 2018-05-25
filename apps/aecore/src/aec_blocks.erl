@@ -341,7 +341,7 @@ validate_micro_block(Block, LeaderKey) ->
 validate_txs_hash(#block{txs = Txs,
                          txs_hash = BlockTxsHash}) ->
     case aec_txs_trees:root_hash(aec_txs_trees:from_txs(Txs)) of
-        BlockTxsHash ->
+        {ok, BlockTxsHash} ->
             ok;
         _Other ->
             {error, malformed_txs_hash}
