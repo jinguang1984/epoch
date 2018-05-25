@@ -85,7 +85,7 @@ get_txs_to_mine_in_pool(TopHash) ->
         aec_trees:trees())
         -> {ok, aec_blocks:block(), aec_pow:nonce()} | {error, term()}.
 create_micro_block_candidate(Txs, TopBlock, CurrentKeyBlock, TopBlockTrees) ->
-    Miner = aec_blocks:miner(TopBlock),
+    Miner = aec_blocks:miner(TopBlock), %% TODO: NG: CHANGE IT - very confusing.
     {ok, aec_blocks:new_micro(TopBlock, CurrentKeyBlock, Miner, Txs, TopBlockTrees)}.
 
 
