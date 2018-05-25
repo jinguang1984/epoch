@@ -218,7 +218,7 @@ validate_pow({#header{nonce        = Nonce,
     %% Zero nonce and pow_evidence before hashing, as this is how the mined block
     %% got hashed.
     Header1 = Header#header{nonce = 0, pow_evidence = no_value},
-    HeaderBinary = serialize_to_binary(Header1),
+    HeaderBinary = hash_header(Header1),
     case aec_pow_cuckoo:verify(HeaderBinary, Nonce, Evd, Target) of
         true ->
             ok;
