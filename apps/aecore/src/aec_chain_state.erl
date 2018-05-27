@@ -179,6 +179,7 @@ wrap_block(Block) ->
          , hash = Hash
          , height = aec_headers:height(Header)
          , type = aec_blocks:type(Block)
+         , key_hash = aec_headers:key_hash(Header)
          }.
 
 wrap_header(Header) ->
@@ -187,6 +188,7 @@ wrap_header(Header) ->
          , hash = Hash
          , height = aec_headers:height(Header)
          , type = aec_headers:type(Header)
+         , key_hash = aec_headers:key_hash(Header)
          }.
 
 export_header(#node{header = Header}) ->
@@ -624,7 +626,7 @@ set_height(#node{type = micro, key_hash = KeyHash} = Node) ->
     Height = case aec_db:get_header(KeyHash) of
                 [] -> error({key_hash_not_found, KeyHash});
                 Header -> aec_headers:height(Header)
-            end,
+             end,
     Node#node{height = Height};
 set_height(#node{height = Height} = Node) ->
     Node#node{height = Height}.

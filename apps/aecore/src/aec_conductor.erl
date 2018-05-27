@@ -403,7 +403,6 @@ wrap_worker_fun(Fun) ->
 handle_worker_reply(Pid, Reply, State) ->
     Workers = State#state.workers,
     Blocked = State#state.blocked_tags,
-    epoch_mining:info("MY WORKERS ARE: ~p", [Workers]),
     case orddict:find(Pid, Workers) of
         {ok, Info} ->
             cleanup_after_worker(Info),

@@ -132,6 +132,7 @@ new_key(LastBlock, CurrentKeyBlock, Miner, Trees0) ->
                             {block(), aec_trees:trees()}.
 new_with_state(LastBlock = #block{}, CurrentKeyBlock, Miner, Txs, Trees0) ->
     {ok, LastBlockHeaderHash} = hash_internal_representation(LastBlock),
+    {ok, KeyBlockHash} = hash_internal_representation(CurrentKeyBlock),
 
     LastBlockHeight = height(CurrentKeyBlock),
     Version = protocol_effective_at_height(LastBlockHeight),
@@ -141,7 +142,7 @@ new_with_state(LastBlock = #block{}, CurrentKeyBlock, Miner, Txs, Trees0) ->
 
     NewBlock =
         #block{height = LastBlockHeight,
-               key_hash = key_hash(CurrentKeyBlock),
+               key_hash = KeyBlockHash,
                prev_hash = LastBlockHeaderHash,
                root_hash = aec_trees:hash(Trees),
                txs_hash = TxsRootHash,
@@ -347,5 +348,8 @@ validate_txs_hash(#block{txs = Txs,
             {error, malformed_txs_hash}
     end.
 
-type(#block{miner = undefined}) -> key;
-type(_) -> micro.
+type(Block = #block{}) ->
+    case is_key_block(Block) of
+        true  -> key;
+        false -> micro
+    end.

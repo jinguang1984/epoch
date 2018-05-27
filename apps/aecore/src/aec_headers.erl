@@ -11,6 +11,7 @@
          time_in_secs/1,
          time_in_msecs/1,
          miner/1,
+         key_hash/1,
          serialize_to_binary/1,
          serialize_to_map/1,
          deserialize_from_binary/1,
@@ -66,6 +67,9 @@ time_in_msecs(Header) ->
 
 miner(Header) ->
     Header#header.miner.
+
+key_hash(Header) ->
+    Header#header.key_hash.
 
 -spec serialize_to_map(header()) -> {ok, map()}.
 serialize_to_map(H = #header{}) ->
@@ -244,5 +248,12 @@ validate_signature({#header{signature = Sig} = Header, _, LeaderKey}) ->
         {error, _} -> {error, signature_verification_failed}
     end.
 
-type(#header{miner = undefined}) -> key;
-type(_) -> micro.
+type(Header = #header{}) ->
+    case is_key_header(Header) of
+        true  -> key;
+        false -> micro
+    end.
+
+is_key_header(#header{miner = Miner, height = Height}) ->
+    Miner =/= <<0:?MINER_PUB_BYTES/unit:8>> orelse
+        (Miner =:= <<0:?MINER_PUB_BYTES/unit:8>> andalso Height =:= aec_block_genesis:height()).
