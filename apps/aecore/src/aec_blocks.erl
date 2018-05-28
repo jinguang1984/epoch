@@ -137,7 +137,7 @@ new_with_state(LastBlock = #block{}, CurrentKeyBlock, Miner, Txs, Trees0) ->
     LastBlockHeight = height(CurrentKeyBlock),
     Version = protocol_effective_at_height(LastBlockHeight),
 
-    {ok, Txs1, Trees} = aec_trees:apply_signed_txs(Miner, aec_blocks:txs(LastBlock), Txs, Trees0, LastBlockHeight, Version),
+    {ok, Txs1, Trees} = aec_trees:apply_signed_txs(Miner, Txs, aec_blocks:txs(LastBlock), Trees0, LastBlockHeight, Version),
     {ok, TxsRootHash} = aec_txs_trees:root_hash(aec_txs_trees:from_txs(Txs1)),
 
     NewBlock =
