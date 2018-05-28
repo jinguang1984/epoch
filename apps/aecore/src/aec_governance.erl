@@ -91,4 +91,4 @@ name_registrars() ->
 
 micro_block_cycle() ->
     %% Miliseconds
-    3000.
+    300.
