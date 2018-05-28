@@ -377,6 +377,8 @@ worker_timeout(create_micro_block_candidate) ->
     infinity;
 worker_timeout(micro_signing) ->
     infinity;
+worker_timeout(micro_sleep) ->
+    infinity; %% TODO: pull from governance and add buffer
 worker_timeout(mining) ->
     aeu_env:get_env(aecore, mining_attempt_timeout, ?DEFAULT_MINING_ATTEMPT_TIMEOUT);
 worker_timeout(wait_for_keys) ->
@@ -713,14 +715,12 @@ handle_micro_signing_reply({{error, {runtime, Reason}}, _}, State) ->
 %%%===================================================================
 %%% Worker: Timer for sleep between micro blocks
 
-start_micro_sleep(#state{block_candidate = Candidate,
-                  consensus = #consensus{leader = true, micro_block_cycle = Timout}} = State) ->
+start_micro_sleep(#state{consensus = #consensus{leader = true, micro_block_cycle = Timeout}} = State) ->
     epoch_mining:debug("Starting sleep in between microblocks"),
-    HeaderBin = Candidate#candidate.bin,
     Info      = [{starting_micro_sleep, State#state.seen_top_block_hash}],
     aec_events:publish(starting_micro_sleep, Info),
     Fun = fun() ->
-                  {erlang:sleep(Timout), HeaderBin}
+                  timer:sleep(Timeout) %% TODO: remove 'timer' dependency
           end,
     dispatch_worker(micro_sleep, Fun, State);
 start_micro_sleep(_State) ->
@@ -889,7 +889,7 @@ handle_add_block(Block, #state{consensus = #consensus{leader_key = LeaderKey}} =
 setup_loop(State, LeaderKey, {created, block}) ->
     State1 = State#state{consensus = #consensus{leader = true, leader_key = LeaderKey}},
     start_mining(State1),
-    start_micro_signing(State1);
+    start_micro_sleep(State1);
 setup_loop(State, LeaderKey, {received, block}) ->
     State1 = State#state{consensus = #consensus{leader = false, leader_key = LeaderKey}},
     start_mining(State1);

@@ -349,7 +349,7 @@ assert_micro_block_time(Node) ->
     end.
 
 time_diff_greater_than_minimal(Node, PrevNode) ->
-    node_time(Node) >= node_time(PrevNode) + ?ACCEPTED_MICRO_BLOCK_MIN_TIME_DIFF.
+    node_time(Node) >= node_time(PrevNode) + aec_governance:micro_block_cycle().
 
 %% Transitively compute new state trees iff
 %%   - We can find the state trees of the previous node; and
