@@ -506,7 +506,16 @@ apply_node_transactions(Node, Trees) ->
     PrevBlockTxs = get_prev_node_txs(Node),
     Height = node_height(Node),
     Version = node_version(Node),
-    Miner = node_miner(Node),
+
+    %% TODO: NG - it looks like we should keep Miner and Height of the prev key block in state in aec_chain_state
+    %% TODO: fixit ^^
+    Miner = case is_micro_block(Node) of
+        true ->
+            node_miner(db_get_node(node_key_hash(Node)));
+        false ->
+            node_miner(Node)
+    end,
+
     case aec_trees:apply_signed_txs_strict(Miner, Txs, PrevBlockTxs, Trees, Height, Version) of
         {ok, _, NewTrees} -> NewTrees;
         {error,_What} -> internal_error(invalid_transactions_in_block)

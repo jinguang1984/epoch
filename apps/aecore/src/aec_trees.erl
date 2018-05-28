@@ -167,6 +167,8 @@ internal_commit_to_db(Trees) ->
 
 apply_signed_txs_common(Miner, SignedTxs, PrevBlockSignedTxs, Trees0, Height, ConsensusVersion, Strict) ->
     Trees1 = perform_pre_transformations(Trees0, Height),
+    %% TODO: NG BUG1: we apply award for every block (only key blocks!)
+    %% TODO: NG BUG2: Where do we give award to the second miner?
     case apply_txs_on_state_trees(SignedTxs, Trees1, Height, ConsensusVersion, Strict) of
         {ok, SignedTxs1, Trees2} ->
             TotalReward = calculate_total_reward(SignedTxs1, PrevBlockSignedTxs),
