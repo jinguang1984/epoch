@@ -995,7 +995,7 @@ settle_negative(Cfg) ->
                                       #{initiator_amount => ChannelAmount,
                                         ttl => ClosesAt + 2,
                                         responder_amount => 0}, S5),
-    {ok, Tx5} = aesc_close_mutual_tx:new(TxSpec5),
+    {ok, Tx5} = aesc_settle_tx:new(TxSpec5),
     {error, channel_does_not_exist} =
         aetx:check(Tx5, Trees1, ClosesAt + 2, ?PROTOCOL_VERSION),
   ok.

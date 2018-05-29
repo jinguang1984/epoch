@@ -59,6 +59,7 @@ new(#{initiator          := InitiatorPubKey,
       lock_period        := LockPeriod,
       ttl                := TTL,
       fee                := Fee,
+      state_hash         := StateHash,
       nonce              := Nonce}) ->
     Tx = #channel_create_tx{initiator          = InitiatorPubKey,
                             responder          = ResponderPubKey,
@@ -68,6 +69,7 @@ new(#{initiator          := InitiatorPubKey,
                             lock_period        = LockPeriod,
                             ttl                = TTL,
                             fee                = Fee,
+                            state_hash         = StateHash,
                             nonce              = Nonce},
     {ok, aetx:new(?MODULE, Tx)}.
 
@@ -94,6 +96,7 @@ check(#channel_create_tx{initiator          = InitiatorPubKey,
                          channel_reserve    = ChannelReserve,
                          nonce              = Nonce,
                          ttl                = TTL,
+                         state_hash         = _StateHash,
                          fee                = Fee}, _Context, Trees, Height,
                                                     _ConsensusVersion) ->
     Checks =
@@ -115,6 +118,7 @@ process(#channel_create_tx{initiator          = InitiatorPubKey,
                            responder          = ResponderPubKey,
                            responder_amount   = ResponderAmount,
                            fee                = Fee,
+                           state_hash         = _StateHash,
                            nonce              = Nonce} = CreateTx, _Context, Trees0, _Height,
                                                   _ConsensusVersion) ->
     AccountsTree0 = aec_trees:accounts(Trees0),
@@ -155,6 +159,7 @@ serialize(#channel_create_tx{initiator          = InitiatorPubKey,
                              lock_period        = LockPeriod,
                              ttl                = TTL,
                              fee                = Fee,
+                             state_hash         = StateHash,
                              nonce              = Nonce}) ->
     {version(),
      [ {initiator         , InitiatorPubKey}
@@ -165,6 +170,7 @@ serialize(#channel_create_tx{initiator          = InitiatorPubKey,
      , {lock_period       , LockPeriod}
      , {ttl               , TTL}
      , {fee               , Fee}
+     , {state_hash        , StateHash}
      , {nonce             , Nonce}
      ]}.
 
@@ -178,6 +184,7 @@ deserialize(?CHANNEL_CREATE_TX_VSN,
             , {lock_period       , LockPeriod}
             , {ttl               , TTL}
             , {fee               , Fee}
+            , {state_hash        , StateHash}
             , {nonce             , Nonce}]) ->
     #channel_create_tx{initiator          = InitiatorPubKey,
                        initiator_amount   = InitiatorAmount,
@@ -187,6 +194,7 @@ deserialize(?CHANNEL_CREATE_TX_VSN,
                        lock_period        = LockPeriod,
                        ttl                = TTL,
                        fee                = Fee,
+                       state_hash         = StateHash,
                        nonce              = Nonce}.
 
 -spec for_client(tx()) -> map().
@@ -198,6 +206,7 @@ for_client(#channel_create_tx{initiator          = Initiator,
                               lock_period        = LockPeriod,
                               nonce              = Nonce,
                               ttl                = TTL,
+                              state_hash         = StateHash,
                               fee                = Fee}) ->
     #{<<"data_schema">>        => <<"ChannelCreateTxJSON">>, % swagger schema name
       <<"vsn">>                => version(),
@@ -209,6 +218,7 @@ for_client(#channel_create_tx{initiator          = Initiator,
       <<"lock_period">>        => LockPeriod,
       <<"nonce">>              => Nonce,
       <<"ttl">>                => TTL,
+      <<"state_hash">>         => aec_base58c:encode(state, StateHash),
       <<"fee">>                => Fee}.
 
 serialization_template(?CHANNEL_CREATE_TX_VSN) ->
@@ -220,6 +230,7 @@ serialization_template(?CHANNEL_CREATE_TX_VSN) ->
     , {lock_period       , int}
     , {ttl               , int}
     , {fee               , int}
+    , {state_hash        , binary}
     , {nonce             , int}
     ].
 

@@ -1086,25 +1086,34 @@ check_accept_msg(#{ chain_hash           := ChainHash
             {error, chain_hash_mismatch}
     end.
 
-dep_tx_for_signing(#{from := From} = Opts, #data{on_chain_id = ChanId}) ->
+dep_tx_for_signing(#{from := From} = Opts, #data{on_chain_id = ChanId, state=State}) ->
+    StateHash = aesc_offchain_state:hash(State),
+    {LastRound, _} = aesc_offchain_state:get_latest_signed_tx(State),
     Def = deposit_tx_defaults(ChanId, From, maps:get(ttl, Opts, undefined)),
     Opts1 = maps:merge(Def, Opts),
-    lager:debug("deposit_tx Opts = ~p", [Opts1]),
-    {ok, _} = Ok = aesc_deposit_tx:new(Opts1),
+    Opts2 = maps:merge(Opts1, #{state_hash => StateHash,
+                                round      => LastRound + 1}),
+    lager:debug("deposit_tx Opts = ~p", [Opts2]),
+    {ok, _} = Ok = aesc_deposit_tx:new(Opts2),
     Ok.
 
-wdraw_tx_for_signing(#{to := From} = Opts, #data{on_chain_id = ChanId}) ->
+wdraw_tx_for_signing(#{to := From} = Opts, #data{on_chain_id = ChanId, state=State}) ->
+    StateHash = aesc_offchain_state:hash(State),
+    {LastRound, _} = aesc_offchain_state:get_latest_signed_tx(State),
     Def = withdraw_tx_defaults(ChanId, From, maps:get(ttl, Opts, undefined)),
     Opts1 = maps:merge(Def, Opts),
-    lager:debug("withdraw_tx Opts = ~p", [Opts1]),
-    {ok, _} = Ok = aesc_withdraw_tx:new(Opts1),
+    Opts2 = maps:merge(Opts1, #{state_hash => StateHash,
+                                round      => LastRound + 1}),
+    lager:debug("withdraw_tx Opts = ~p", [Opts2]),
+    {ok, _} = Ok = aesc_withdraw_tx:new(Opts2),
     Ok.
 
-create_tx_for_signing(#data{opts = #{initiator := Initiator} = Opts}) ->
+create_tx_for_signing(#data{opts = #{initiator := Initiator} = Opts, state=State}) ->
+    StateHash = aesc_offchain_state:hash(State),
     Def = create_tx_defaults(Initiator),
     Opts1 = maps:merge(Def, Opts),
     lager:debug("create_tx Opts = ~p", [Opts1]),
-    {ok, _} = Ok = aesc_create_tx:new(Opts1),
+    {ok, _} = Ok = aesc_create_tx:new(Opts1#{state_hash => StateHash}),
     Ok.
 
 create_tx_defaults(Initiator) ->
@@ -1139,7 +1148,8 @@ close_mutual_tx(LatestSignedTx, D) ->
 
 close_mutual_tx(Account, Nonce, LatestSignedTx,
                 #data{ on_chain_id = ChanId
-                     , opts        = Opts } = D) ->
+                     , opts        = Opts
+                     , state       = State} = D) ->
     Def = close_mutual_defaults(Account, D),
     Opts1 = maps:merge(Def, Opts),
     LatestTx = aetx_sign:tx(LatestSignedTx),
@@ -1147,11 +1157,15 @@ close_mutual_tx(Account, Nonce, LatestSignedTx,
     RAmt = tx_responder_amount(LatestTx),
     {IAmt1, RAmt1} = pay_close_mutual_fee(maps:get(fee, Opts1), IAmt, RAmt),
     #{ttl := TTL, fee := Fee} = Opts1,
+    StateHash = aesc_offchain_state:hash(State),
+    {LastRound, _} = aesc_offchain_state:get_latest_signed_tx(State),
     aesc_close_mutual_tx:new(#{ channel_id       => ChanId
                               , initiator_amount => IAmt1
                               , responder_amount => RAmt1
                               , ttl              => TTL
                               , fee              => Fee
+                              , state_hash       => StateHash
+                              , round            => LastRound + 1
                               , nonce            => Nonce }).
 
 pay_close_mutual_fee(Fee, IAmt, RAmt) ->
