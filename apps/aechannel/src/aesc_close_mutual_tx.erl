@@ -90,7 +90,7 @@ check(#channel_close_mutual_tx{channel_id       = ChannelId,
                                ttl              = TTL,
                                fee              = Fee,
                                state_hash       = _StateHash,
-                               round            = _Round,
+                               round            = Round,
                                nonce            = Nonce}, _Context, Trees, Height,
                                                 _ConsensusVersion) ->
     case aesc_state_tree:lookup(ChannelId, aec_trees:channels(Trees)) of
@@ -118,6 +118,9 @@ check(#channel_close_mutual_tx{channel_id       = ChannelId,
                 end,
                 fun() -> % check TTL
                     ok_or_error(TTL >= Height, ttl_expired)
+                end,
+                fun() -> % check round
+                    aesc_utils:check_round_at_last_last(Channel, Round)
                 end
                 ],
             case aeu_validation:run(Checks) of

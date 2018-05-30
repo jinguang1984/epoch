@@ -28,6 +28,7 @@
          initiator_amount/1,
          responder/1,
          responder_amount/1,
+         total_amount/1,
          updates/1,
          previous_round/1,
          round/1,
@@ -226,6 +227,11 @@ responder(#channel_offchain_tx{responder = ResponderPubKey}) ->
 -spec responder_amount(tx()) -> aesc_channels:amount().
 responder_amount(#channel_offchain_tx{responder_amount = ResponderAmount}) ->
     ResponderAmount.
+
+-spec total_amount(tx()) -> aesc_channels:amount().
+total_amount(#channel_offchain_tx{initiator_amount = InitiatorAmount,
+                                      responder_amount = ResponderAmount}) ->
+    InitiatorAmount + ResponderAmount.
 
 -spec updates(tx()) -> [offchain_update()].
 updates(#channel_offchain_tx{updates = Updates}) ->

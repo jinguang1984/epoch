@@ -13,7 +13,10 @@
          check_is_active/1,
          check_is_peer/2,
          check_are_peers/2,
-         check_are_funds_in_channel/3]).
+         check_are_funds_in_channel/3,
+         check_round_greater_than_last/2,
+         check_round_at_last_last/2
+        ]).
 
 %%%===================================================================
 %%% API
@@ -36,15 +39,17 @@ check_active_channel_exists(ChannelId, StateTx, Trees) ->
                     ChTotalAmount     = aesc_channels:total_amount(Ch),
                     SInitiatorPubKey  = aesc_offchain_tx:initiator(StateTx),
                     SResponderPubKey  = aesc_offchain_tx:responder(StateTx),
-                    SInitiatorAmount  = aesc_offchain_tx:initiator_amount(StateTx),
-                    SResponderAmount  = aesc_offchain_tx:responder_amount(StateTx),
-                    STotalAmount      = SInitiatorAmount + SResponderAmount,
+                    STotalAmount      = aesc_offchain_tx:total_amount(StateTx),
+                    ChannelRound      = aesc_channels:round(Ch),
+                    StRound           = aesc_offchain_tx:round(StateTx),
                     case {ChInitiatorPubKey =:= SInitiatorPubKey,
                           ChResponderPubKey =:= SResponderPubKey,
-                          ChTotalAmount     =:= STotalAmount} of
-                        {true, true, true} -> ok;
-                        {true, true, _   } -> {error, payload_amounts_change_channel_funds};
-                        {_   , _   , _   } -> {error, wrong_channel_peers}
+                          ChTotalAmount     =:= STotalAmount,
+                          ChannelRound      =<  StRound} of
+                        {true, true, true, true} -> ok;
+                        {true, true, _   , true} -> {error, payload_amounts_change_channel_funds};
+                        {_   , _   , _   , true} -> {error, wrong_channel_peers};
+                        {_   , _   , _   , _   } -> {error, old_round}
                     end;
                 false ->
                     {error, channel_not_active}
@@ -56,6 +61,22 @@ check_is_active(Channel) ->
     case aesc_channels:is_active(Channel) of
         true  -> ok;
         false -> {error, channel_not_active}
+    end.
+
+-spec check_round_greater_than_last(aesc_channels:channel(), non_neg_integer())
+    -> ok | {error, old_round}.
+check_round_greater_than_last(Channel, Round) ->
+    case aesc_channels:round(Channel) < Round of
+        true  -> ok;
+        false -> {error, old_round}
+    end.
+
+-spec check_round_at_last_last(aesc_channels:channel(), non_neg_integer())
+    -> ok | {error, old_round}.
+check_round_at_last_last(Channel, Round) ->
+    case aesc_channels:round(Channel) =< Round of
+        true  -> ok;
+        false -> {error, old_round}
     end.
 
 -spec check_is_peer(pubkey(), list(pubkey())) -> ok | {error, account_not_peer}.

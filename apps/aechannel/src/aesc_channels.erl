@@ -10,7 +10,7 @@
 
 %% API
 -export([deserialize/1,
-         deposit/2,
+         deposit/3,
          is_active/1,
          is_solo_closed/2,
          is_solo_closing/2,
@@ -19,7 +19,7 @@
          serialize/1,
          slash/3,
          close_solo/3,
-         withdraw/2]).
+         withdraw/3]).
 
 %% Getters
 -export([id/1,
@@ -81,9 +81,10 @@ close_solo(#channel{lock_period = LockPeriod} = Ch, State, Height) ->
                round            = aesc_offchain_tx:round(State),
                closes_at        = ClosesAt}.
 
--spec deposit(channel(), amount()) -> channel().
-deposit(#channel{total_amount = TotalAmount} = Ch, Amount) ->
-    Ch#channel{total_amount = TotalAmount + Amount}.
+-spec deposit(channel(), amount(), seq_number()) -> channel().
+deposit(#channel{total_amount = TotalAmount} = Ch, Amount, Round) ->
+    Ch#channel{total_amount = TotalAmount + Amount,
+               round = Round}.
 
 -spec deserialize(binary()) -> channel().
 deserialize(Bin) ->
@@ -186,9 +187,10 @@ slash(#channel{lock_period = LockPeriod} = Ch, State, Height) ->
                round            = aesc_offchain_tx:round(State),
                closes_at        = ClosesAt}.
 
--spec withdraw(channel(), amount()) -> channel().
-withdraw(#channel{total_amount = TotalAmount} = Ch, Amount) ->
-    Ch#channel{total_amount = TotalAmount - Amount}.
+-spec withdraw(channel(), amount(), seq_number()) -> channel().
+withdraw(#channel{total_amount = TotalAmount} = Ch, Amount, Round) ->
+    Ch#channel{total_amount = TotalAmount - Amount,
+               round = Round}.
 
 %%%===================================================================
 %%% Getters

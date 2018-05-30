@@ -60,8 +60,6 @@
           payload    :: binary(),
           ttl        :: non_neg_integer(),
           fee        :: non_neg_integer(),
-          state_hash :: binary(),
-          round      :: integer(),
           nonce      :: non_neg_integer()
          }).
 
@@ -71,8 +69,6 @@
           payload    :: binary(),
           ttl        :: non_neg_integer(),
           fee        :: non_neg_integer(),
-          state_hash :: binary(),
-          round      :: integer(),
           nonce      :: non_neg_integer()
          }).
 
