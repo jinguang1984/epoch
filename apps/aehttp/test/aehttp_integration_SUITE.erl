@@ -1895,7 +1895,7 @@ block_latest(_Config) ->
 %% we need really slow mining; since mining speed is not modified for the
 %% first X blocks, we need to premine them before the test
 block_pending(_Config) ->
-    BlocksToPremine = rpc(aec_governance, blocks_to_check_difficulty_count, []),
+    BlocksToPremine = rpc(aec_governance, key_blocks_to_check_difficulty_count, []),
     aecore_suite_utils:mine_blocks(aecore_suite_utils:node_name(?NODE),
                                    BlocksToPremine),
     lists:foreach(
@@ -2039,7 +2039,7 @@ block_txs_count_latest(_Config) ->
         fun(_) -> get_block_txs_count_preset("latest") end).
 
 block_txs_count_pending(_Config) ->
-    BlocksToPremine = rpc(aec_governance, blocks_to_check_difficulty_count, []),
+    BlocksToPremine = rpc(aec_governance, key_blocks_to_check_difficulty_count, []),
     aecore_suite_utils:mine_blocks(aecore_suite_utils:node_name(?NODE),
                                    BlocksToPremine),
         {ok, 404, #{<<"reason">> := <<"Not mining, no pending block">>}} =
@@ -3053,7 +3053,7 @@ channel_create(Config, IConnPid, RConnPid) ->
 
     {ok, SSignedCrTx} = aec_base58c:safe_decode(transaction, EncodedSignedCrTx),
     SignedCrTx = aetx_sign:deserialize_from_binary(SSignedCrTx),
-    %% same transaction 
+    %% same transaction
     CrTx = aetx_sign:tx(SignedCrTx),
 
     {channel_create_tx, Tx} = aetx:specialize_type(CrTx),
@@ -3372,7 +3372,7 @@ sc_ws_close_mutual(Config, Closer) when Closer =:= initiator
 
     {ok, SSignedMutualTx} = aec_base58c:safe_decode(transaction, EncodedSignedMutualTx),
     SignedMutualTx = aetx_sign:deserialize_from_binary(SSignedMutualTx),
-    %% same transaction 
+    %% same transaction
     ShutdownTx = aetx_sign:tx(SignedMutualTx),
 
     {channel_close_mutual_tx, MutualTx} = aetx:specialize_type(ShutdownTx),
